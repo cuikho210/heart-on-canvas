@@ -4,8 +4,8 @@ const SIZE: number = 720
 const SCALE: number = innerWidth / innerHeight
 
 class Engine {
-    private canavs: HTMLCanvasElement = document.createElement('canvas')
-    private ctx: CanvasRenderingContext2D | null = this.canavs.getContext('2d')
+    private canvas: HTMLCanvasElement = document.createElement('canvas')
+    private ctx: CanvasRenderingContext2D | null = this.canvas.getContext('2d')
 
     private WIDTH: number = SIZE * SCALE
     private HEIGHT: number = SIZE
@@ -17,24 +17,27 @@ class Engine {
     private rootX: number = (this.WIDTH / 2)
     private rootY: number = (this.HEIGHT / 2)
 
-    private hearts: Heart[] = []
+    private hearts: Heart[][] = []
 
     constructor () {
         // Init canavs
-        this.canavs.width = this.WIDTH
-        this.canavs.height = this.HEIGHT
-        this.canavs.style.backgroundColor = '#000'
+        this.canvas.width = this.WIDTH
+        this.canvas.height = this.HEIGHT
+        // this.canavs.style.backgroundColor = '#000'
+        this.canvas.style.background = 'radial-gradient(#2e0912, #000000)'
 
-        document.body.append(this.canavs)
+        document.body.append(this.canvas)
 
         // Init hears
-        let maxLength: number = 50
+        let maxLength: number = 30
 
-        this.drawHeart(this.heartSize, maxLength, this.degToRad(0.5), () => Math.random() * 0.1 + 1.2, true)
-        this.drawHeart(this.heartSize - 0.5, maxLength, this.degToRad(0.5), () => Math.random() * 0.1 + 1.2)
-        this.drawHeart(this.heartSize - 1, maxLength, this.degToRad(0.5), () => Math.random() * 0.1 + 1.2)
-        this.drawHeart(this.heartSize - 1.5, maxLength, this.degToRad(0.5), () => Math.random() * 0.1 + 1.2)
-        this.drawHeart(this.heartSize + 0.5, 120, this.degToRad(2), () => Math.random() * 1 + 1)
+        this.drawHeart(this.heartSize, maxLength, this.degToRad(2), () => Math.random() * 5, () => Math.random() * 0.8 + 0.2)
+        this.drawHeart(this.heartSize, maxLength, this.degToRad(0.5), () => Math.random() * 25, () => Math.random())
+        this.drawHeart(this.heartSize, maxLength, this.degToRad(1), () => Math.random() * 50, () => Math.random())
+        this.drawHeart(this.heartSize, maxLength, this.degToRad(1), () => Math.random() * 100, () => Math.random())
+        this.drawHeart(this.heartSize, maxLength, this.degToRad(2), () => Math.random() * 150, () => Math.random())
+        this.drawHeart(this.heartSize, maxLength, this.degToRad(1.5), () => Math.random() * 30, () => Math.random() * 0.5 + 0.1, 350)
+        this.drawHeart(this.heartSize, maxLength, this.degToRad(1.5), () => Math.random() * -30, () => Math.random() * 0.5 + 0.1, 350)
 
         // Start loop
         this.loop()
@@ -42,7 +45,9 @@ class Engine {
 
     private update (): void {
         for (let i = 0; i < this.hearts.length; i ++) {
-            this.hearts[i].Update()
+            for (let j = 0; j < this.hearts[i].length; j ++) {
+                this.hearts[i][j].Update()
+            }
         }
     }
 
@@ -70,12 +75,16 @@ class Engine {
         size: number,
         maxLength: number,
         radAdd: number,
-        randomVelocity: RandomVelocity,
-        isToggle: boolean = false
+        randomPosition: RandomNumber,
+        randomAlpha: RandomNumber,
+        delay: number = 0
     ): void {
         const self: this = this
         
         let rad: number = 0
+
+        let hearts: Heart[] = []
+        this.hearts.push(hearts)
 
         // x = size * 16sin(t)^3
         function getX (t: number): number {
@@ -93,23 +102,32 @@ class Engine {
 
             rad += radAdd
 
-            self.hearts.push(new Heart(
+            let angle: number = rad - (Math.PI / 2)
+            let hX: number = randomPosition() * Math.cos(angle)
+            let hY: number = randomPosition() * Math.sin(angle)
+            
+            let rootX: number = x + self.rootX - hX
+            let rootY: number = y + self.rootY - hY
+
+            if ((x > 0 && x <= hX) || (x < 0 && x >= hX)) {
+                rootX = x + self.rootX
+            }
+
+            hearts.push(new Heart(
                 self.ctx,
-                rad - (Math.PI / 2),
-                x + self.rootX,
-                y + self.rootY,
+                angle,
+                rootX,
+                rootY,
                 maxLength,
-                randomVelocity
+                randomAlpha
             ))
 
             if (rad < Math.PI * 2 * self.heartDrawLength) {
-                requestAnimationFrame(draw)
+                draw()
             }
             else {
-                if (isToggle) {
-                    for (let i = 0; i < self.hearts.length; i ++) {
-                        self.hearts[i].Start()
-                    }
+                for (let i = 0; i < hearts.length; i ++) {
+                    hearts[i].Start(delay)
                 }
             }
         }

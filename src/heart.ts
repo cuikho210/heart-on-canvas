@@ -5,10 +5,10 @@ class Heart {
     private height: number = 10
 
     private color: RGBAColor = {
-        red: 255,
-        green: 0,
-        blue: 0,
-        alpha: Math.random() * 0.5 + 0.1
+        red: 248,
+        green: 107,
+        blue: 142,
+        alpha: Math.random() * 0.9 + 0.1
     }
 
     private position: HeartPosition = {
@@ -25,7 +25,8 @@ class Heart {
 
     private isRuning: boolean = false
     private currentVelocity: number = 0
-    private randomVelocity: RandomVelocity = () => 0
+    private rootVelocity: number = 1.5
+    private dotSize: number = Math.random() * 2.5 + 0.5
 
     constructor (
         ctx: CanvasRenderingContext2D | null,
@@ -33,20 +34,20 @@ class Heart {
         rootX: number,
         rootY: number,
         maxLength: number,
-        randomVelocity: RandomVelocity
+        randomAlpha: RandomNumber
     ) {
         this.ctx = ctx
         this.position.rootX = rootX
         this.position.rootY = rootY
         this.position.angle = angle
         this.position.maxLength = maxLength
-        this.randomVelocity = randomVelocity
+        this.color.alpha = randomAlpha()
     }
 
     public Update (): void {
         if (this.isRuning) {
             if (this.position.length <= 0) {
-                this.currentVelocity = this.randomVelocity()
+                this.currentVelocity = this.rootVelocity
                 this.position.velocity = this.currentVelocity
             }
             else if (this.position.length > this.position.maxLength) {
@@ -64,61 +65,22 @@ class Heart {
         this.drawHeart()
     }
 
-    public Start (): void {
-        this.isRuning = true
+    public Start (delay: number): void {
+        if (delay === 0) {
+            this.isRuning = true
+            return
+        }
+
+        setTimeout(() => {
+            this.isRuning = true
+        }, delay)
     }
-
-    // private drawHeart() {
-    //     if (!this.ctx) return
-
-    //     // https://stackoverflow.com/questions/58333678/draw-heart-using-javascript-in-any-postionx-y
-    //     let topCurveHeight = this.height * 0.3
-      
-    //     this.ctx.save()
-    //     this.ctx.beginPath()
-        
-    //     this.ctx.moveTo(this.position.x, this.position.y + topCurveHeight)
-
-    //     // top left curve
-    //     this.ctx.bezierCurveTo(
-    //         this.position.x,
-    //         this.position.y, 
-    //         this.position.x - this.width / 2, this.position.y, 
-    //         this.position.x - this.width / 2, this.position.y + topCurveHeight
-    //     )
-      
-    //     // bottom left curve
-    //     this.ctx.bezierCurveTo(
-    //       this.position.x - this.width / 2, this.position.y + (this.height + topCurveHeight) / 2, 
-    //       this.position.x, this.position.y + (this.height + topCurveHeight) / 2, 
-    //       this.position.x, this.position.y + this.height
-    //     )
-      
-    //     // bottom right curve
-    //     this.ctx.bezierCurveTo(
-    //         this.position.x, this.position.y + (this.height + topCurveHeight) / 2, 
-    //         this.position.x + this.width / 2, this.position.y + (this.height + topCurveHeight) / 2, 
-    //         this.position.x + this.width / 2, this.position.y + topCurveHeight
-    //     )
-      
-    //     // top right curve
-    //     this.ctx.bezierCurveTo(
-    //         this.position.x + this.width / 2, this.position.y, 
-    //         this.position.x, this.position.y, 
-    //         this.position.x, this.position.y + topCurveHeight
-    //     )
-      
-    //     this.ctx.closePath()
-    //     this.ctx.fillStyle = this.convertRGBAColorToString()
-    //     this.ctx.fill()
-    //     this.ctx.restore()
-    // }
 
     private drawHeart () {
         if (!this.ctx) return
 
         this.ctx.beginPath()
-        this.ctx.arc(this.position.x, this.position.y, 2, 0, Math.PI * 2)
+        this.ctx.arc(this.position.x, this.position.y, this.dotSize, 0, Math.PI * 2)
         this.ctx.fillStyle = this.convertRGBAColorToString()
         this.ctx.fill()
     }

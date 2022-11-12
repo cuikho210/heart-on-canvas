@@ -17,4 +17,4 @@ interface HeartPosition {
     velocity: number
 }
 
-type RandomVelocity = () => number
+type RandomNumber = () => number
